@@ -43,7 +43,7 @@ Edit `.env` with your credentials:
 ```env
 SMARTHOME_USERNAME=your-email@example.com
 SMARTHOME_PASSWORD=your-password
-SMARTHOME_BASE_URL=https://tgs-smarthome.masti.ch:7149
+SMARTHOME_BASE_URL=https://tgs-smarthome.masti.ch:xxxx
 ```
 
 3. **Run auto-discovery (first time only):**
