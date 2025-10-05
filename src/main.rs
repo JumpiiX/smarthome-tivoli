@@ -89,8 +89,8 @@ async fn main() -> Result<()> {
 
     info!("");
     info!("✅ KNX-HomeKit Bridge is running!");
-    info!("   - KNX devices: 26 discovered");
-    info!("   - Command mappings: 34 loaded");
+    info!("   - KNX devices: {} discovered", devices.len());
+    info!("   - Command mappings: {} loaded", command_mapper.command_cache.len());
     info!("   - HTTP API: http://localhost:{}", api_port);
     info!("");
     info!("📱 Connect Homebridge:");
