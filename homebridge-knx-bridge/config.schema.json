@@ -1,0 +1,25 @@
+{
+  "pluginAlias": "KNXBridge",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": true,
+        "default": "KNX Bridge"
+      },
+      "bridgeUrl": {
+        "title": "Bridge URL",
+        "type": "string",
+        "required": true,
+        "default": "http://localhost:8080",
+        "description": "URL of the KNX-HomeKit Bridge HTTP API"
+      }
+    }
+  },
+  "form": null,
+  "display": null
+}

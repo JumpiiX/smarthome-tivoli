@@ -1,0 +1,24 @@
+{
+  "name": "homebridge-knx-bridge",
+  "version": "1.0.0",
+  "description": "Homebridge plugin for KNX-HomeKit Bridge",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "knx",
+    "smart-home",
+    "enertex"
+  ],
+  "engines": {
+    "node": ">=14.0.0",
+    "homebridge": ">=1.3.0"
+  },
+  "author": "KNX Bridge",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
