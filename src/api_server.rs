@@ -150,19 +150,8 @@ async fn list_devices(State(state): State<ApiState>) -> impl IntoResponse {
     )
 }
 
-fn should_filter_device(device: &Device) -> bool {
-    match device.name.as_str() {
-        "Licht Zenral Aus" => true,
-        "Licht Zentral Aus" => true,
-        "Markisen gesperrt" => true,
-        "Storen gesperrt" => true,
-        "Szene 1" => true,
-        "Szene 2" => true,
-        "Szene 1 Speichern" => true,
-        "Szene 2 Speichern" => true,
-        "Eingang" if device.page == "01" => true,
-        _ => false,
-    }
+fn should_filter_device(_device: &Device) -> bool {
+    false
 }
 
 async fn get_device(
