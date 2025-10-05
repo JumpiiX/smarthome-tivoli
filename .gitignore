@@ -1,0 +1,31 @@
+# Sensitive files - DO NOT COMMIT
+.env
+device_mappings.toml
+device_mappings_auto.toml
+
+# Rust build artifacts
+/target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Homebridge
+homebridge-knx-bridge/node_modules/
+homebridge-knx-bridge/package-lock.json
+
+# Backup files
+*.bak
