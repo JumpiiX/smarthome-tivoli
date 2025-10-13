@@ -36,6 +36,7 @@ if [ ! -f device_mappings.toml ]; then
         -e SMARTHOME_USERNAME="$SMARTHOME_USERNAME" \
         -e SMARTHOME_PASSWORD="$SMARTHOME_PASSWORD" \
         -e SMARTHOME_BASE_URL="$SMARTHOME_BASE_URL" \
+        --entrypoint /app/knx-homekit-bridge \
         knx-bridge-temp --discover
 
     if [ -f device_mappings_auto.toml ]; then
