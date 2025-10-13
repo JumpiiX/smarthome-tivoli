@@ -37,6 +37,7 @@ impl AutoDiscovery {
         info!("Launching Chrome...");
         let browser = Browser::new(LaunchOptions {
             headless: false,
+            sandbox: false,
             ..Default::default()
         })
         .context("Failed to launch Chrome")?;

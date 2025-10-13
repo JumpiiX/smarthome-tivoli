@@ -277,6 +277,7 @@ impl KnxClient {
         info!("Launching headless Chrome...");
         let browser = Browser::new(LaunchOptions {
             headless: false,
+            sandbox: false,
             ..Default::default()
         })
         .context("Failed to launch Chrome")?;
