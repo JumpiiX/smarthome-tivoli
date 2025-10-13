@@ -36,8 +36,11 @@ if [ ! -f device_mappings.toml ]; then
         -e SMARTHOME_USERNAME="$SMARTHOME_USERNAME" \
         -e SMARTHOME_PASSWORD="$SMARTHOME_PASSWORD" \
         -e SMARTHOME_BASE_URL="$SMARTHOME_BASE_URL" \
-        --entrypoint sh \
-        knx-bridge-temp -c "cargo run --release -- --discover && mv device_mappings_auto.toml /app/output/device_mappings.toml"
+        knx-bridge-temp --discover
+
+    if [ -f device_mappings_auto.toml ]; then
+        mv device_mappings_auto.toml device_mappings.toml
+    fi
 
     if [ ! -f device_mappings.toml ]; then
         echo "❌ Auto-discovery failed. Please check your credentials."
