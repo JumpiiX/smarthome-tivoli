@@ -1,0 +1,10 @@
+target/
+.env
+.git/
+.gitignore
+*.toml
+!Cargo.toml
+homebridge/
+homebridge-knx-bridge/node_modules/
+*.md
+.DS_Store

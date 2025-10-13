@@ -9,6 +9,9 @@ Cargo.lock
 **/*.rs.bk
 *.pdb
 
+# Docker volumes
+homebridge/
+
 # IDE files
 .vscode/
 .idea/

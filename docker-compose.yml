@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  knx-bridge:
+    build: .
+    container_name: knx-bridge
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./device_mappings.toml:/app/device_mappings.toml:ro
+    ports:
+      - "8080:8080"
+    networks:
+      - homekit
+
+  homebridge:
+    image: homebridge/homebridge:latest
+    container_name: homebridge
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./homebridge:/homebridge
+    environment:
+      - TZ=Europe/Zurich
+    depends_on:
+      - knx-bridge
+
+networks:
+  homekit:
+    driver: bridge
