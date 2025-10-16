@@ -275,9 +275,16 @@ impl KnxClient {
             .context("SMARTHOME_PASSWORD not set in .env")?;
 
         info!("Launching headless Chrome...");
+
         let browser = Browser::new(LaunchOptions {
-            headless: true,
+            headless: false,
             sandbox: false,
+            args: vec![
+                std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
+                std::ffi::OsStr::new("--disable-dev-shm-usage"),
+                std::ffi::OsStr::new("--disable-web-security"),
+                std::ffi::OsStr::new("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"),
+            ],
             ..Default::default()
         })
         .context("Failed to launch Chrome")?;
@@ -288,6 +295,12 @@ impl KnxClient {
         info!("Navigating to OAuth login page...");
         tab.navigate_to(&start_url)
             .context("Failed to navigate to start URL")?;
+
+        tab.evaluate(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
+            false,
+        )
+        .ok();
 
         info!("Waiting for login page...");
         tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10))

@@ -35,9 +35,16 @@ impl AutoDiscovery {
         let mut all_mappings = HashMap::new();
 
         info!("Launching Chrome...");
+
         let browser = Browser::new(LaunchOptions {
-            headless: true,
+            headless: false,
             sandbox: false,
+            args: vec![
+                std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
+                std::ffi::OsStr::new("--disable-dev-shm-usage"),
+                std::ffi::OsStr::new("--disable-web-security"),
+                std::ffi::OsStr::new("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"),
+            ],
             ..Default::default()
         })
         .context("Failed to launch Chrome")?;
@@ -46,18 +53,27 @@ impl AutoDiscovery {
 
         self.login(&tab)?;
 
+        let mut consecutive_empty_pages = 0;
+
         for page_num in 1..=99 {
             let page = format!("{:02}", page_num);
             info!("📄 Discovering devices on page {}...", page);
             let page_mappings = self.discover_page(&tab, &page)?;
 
             if page_mappings.is_empty() {
-                info!("Page {} is empty, stopping auto-detection", page);
-                break;
+                consecutive_empty_pages += 1;
+                info!("Page {} is empty ({} consecutive empty pages)", page, consecutive_empty_pages);
+
+                if consecutive_empty_pages >= 2 {
+                    info!("Found 2 consecutive empty pages, stopping auto-detection");
+                    break;
+                }
+            } else {
+                consecutive_empty_pages = 0;
+                all_mappings.extend(page_mappings);
             }
 
-            all_mappings.extend(page_mappings);
-            std::thread::sleep(Duration::from_secs(2));
+            std::thread::sleep(Duration::from_millis(500));
         }
 
         info!("✅ Discovery complete! Found {} device mappings", all_mappings.len());
@@ -73,6 +89,60 @@ impl AutoDiscovery {
         let start_url = format!("{}/visu/index.fcgi?00", self.base_url);
         tab.navigate_to(&start_url)
             .context("Failed to navigate to start URL")?;
+
+        // Comprehensive anti-detection JavaScript
+        let stealth_js = r#"
+            // Remove webdriver property
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+
+            // Remove automation flags
+            delete navigator.__webdriver_script_fn;
+            delete navigator.__driver_evaluate;
+            delete navigator.__webdriver_evaluate;
+            delete navigator.__selenium_evaluate;
+            delete navigator.__fxdriver_evaluate;
+            delete navigator.__driver_unwrapped;
+            delete navigator.__webdriver_unwrapped;
+            delete navigator.__selenium_unwrapped;
+            delete navigator.__fxdriver_unwrapped;
+
+            // Spoof plugins
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5]
+            });
+
+            // Spoof languages
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['en-US', 'en']
+            });
+
+            // Chrome runtime
+            window.chrome = { runtime: {} };
+
+            // Permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
+
+            // CDP detection bypass
+            const originalError = Error;
+            Error = function(...args) {
+                const err = new originalError(...args);
+                Object.defineProperty(err, 'stack', {
+                    get: function() { return ''; },
+                    configurable: true
+                });
+                return err;
+            };
+        "#;
+
+        tab.evaluate(stealth_js, false).ok();
+
+        // Add delay to seem human
+        std::thread::sleep(std::time::Duration::from_secs(3));
 
         tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10))
             .context("Login page not found")?;

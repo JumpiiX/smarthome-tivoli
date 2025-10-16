@@ -32,14 +32,16 @@ if [ ! -f device_mappings.toml ]; then
     docker build -t knx-bridge-temp .
 
     docker run --rm \
-        -v "$(pwd):/app/output" \
+        -v "$(pwd):/output" \
+        -w /output \
         -e SMARTHOME_USERNAME="$SMARTHOME_USERNAME" \
         -e SMARTHOME_PASSWORD="$SMARTHOME_PASSWORD" \
         -e SMARTHOME_BASE_URL="$SMARTHOME_BASE_URL" \
-        --entrypoint /app/knx-homekit-bridge \
         knx-bridge-temp --discover
 
+    echo "📋 Checking discovery results..."
     if [ -f device_mappings_auto.toml ]; then
+        echo "✅ Auto-discovery successful! Found devices."
         mv device_mappings_auto.toml device_mappings.toml
     fi
 
