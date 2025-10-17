@@ -4,8 +4,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::time::Duration;
-use tracing::{info, warn};
-use rand::Rng;
+use tracing::info;
 
 pub struct AutoDiscovery {
     base_url: String,
@@ -29,110 +28,15 @@ impl AutoDiscovery {
         })
     }
 
-    // Simulate mouse movement using JavaScript (more compatible)
-    fn simulate_mouse_movement(&self, tab: &headless_chrome::Tab, element_selector: &str) -> Result<()> {
-        let mut rng = rand::thread_rng();
-
-        // Simulate mouse movement path with JavaScript
-        let mouse_js = format!(r#"
-            (function() {{
-                const element = document.querySelector('{}');
-                if (!element) return;
-
-                const rect = element.getBoundingClientRect();
-                const targetX = rect.left + (rect.width / 2) + Math.random() * 10 - 5;
-                const targetY = rect.top + (rect.height / 2) + Math.random() * 10 - 5;
-
-                // Dispatch mousemove events
-                let steps = Math.floor(Math.random() * 10) + 15;
-                let startX = Math.random() * 500 + 100;
-                let startY = Math.random() * 300 + 100;
-
-                for (let i = 0; i < steps; i++) {{
-                    const progress = i / steps;
-                    const curve = progress * progress * (3.0 - 2.0 * progress);
-
-                    const x = startX + (targetX - startX) * curve;
-                    const y = startY + (targetY - startY) * curve;
-
-                    const event = new MouseEvent('mousemove', {{
-                        bubbles: true,
-                        cancelable: true,
-                        view: window,
-                        clientX: x,
-                        clientY: y
-                    }});
-                    document.dispatchEvent(event);
-                }}
-
-                // Hover over the element
-                const hoverEvent = new MouseEvent('mouseover', {{
-                    bubbles: true,
-                    cancelable: true,
-                    view: window,
-                    clientX: targetX,
-                    clientY: targetY
-                }});
-                element.dispatchEvent(hoverEvent);
-            }})();
-        "#, element_selector);
-
-        tab.evaluate(&mouse_js, false).ok();
-        std::thread::sleep(Duration::from_millis(rng.gen_range(200..400)));
-
-        Ok(())
-    }
-
-    // Random mouse jitter
-    fn random_mouse_jitter(&self, tab: &headless_chrome::Tab) -> Result<()> {
-        let mut rng = rand::thread_rng();
-
-        let jitter_js = format!(r#"
-            (function() {{
-                const x = Math.random() * 1000 + 200;
-                const y = Math.random() * 600 + 200;
-
-                for (let i = 0; i < 5; i++) {{
-                    const event = new MouseEvent('mousemove', {{
-                        bubbles: true,
-                        cancelable: true,
-                        view: window,
-                        clientX: x + Math.random() * 50 - 25,
-                        clientY: y + Math.random() * 50 - 25
-                    }});
-                    document.dispatchEvent(event);
-                }}
-            }})();
-        "#);
-
-        tab.evaluate(&jitter_js, false).ok();
-        std::thread::sleep(Duration::from_millis(rng.gen_range(100..300)));
-
-        Ok(())
-    }
-
-    // Random scroll
-    fn random_scroll(&self, tab: &headless_chrome::Tab) -> Result<()> {
-        let mut rng = rand::thread_rng();
-        let scroll_amount = rng.gen_range(50..200);
-
-        let scroll_js = format!("window.scrollBy({{ top: {}, behavior: 'smooth' }});", scroll_amount);
-        tab.evaluate(&scroll_js, false).ok();
-
-        std::thread::sleep(Duration::from_millis(rng.gen_range(300..600)));
-
-        Ok(())
-    }
-
     pub async fn discover_all_mappings(&self, _pages: &[String]) -> Result<HashMap<String, String>> {
         info!("🔍 Starting auto-discovery mode...");
         info!("Auto-detecting all pages with devices...");
         info!("");
         info!("📋 How this works:");
-        info!("   1. Chrome will open and attempt automatic login");
-        info!("   2. If CAPTCHA appears, YOU need to solve it manually");
-        info!("   3. Session will be saved to chrome_data/");
-        info!("   4. Next runs will skip login entirely!");
+        info!("   1. Chrome will open to the login page");
+        info!("   2. YOU login manually (first time only)");
+        info!("   3. Session saves to chrome_data/");
+        info!("   4. Future runs = automatic login!");
         info!("");
 
         let mut all_mappings = HashMap::new();
@@ -266,7 +170,7 @@ impl AutoDiscovery {
     }
 
     fn login(&self, tab: &headless_chrome::Tab) -> Result<()> {
-        info!("Checking login status...");
+        info!("Navigating to login page...");
 
         let start_url = format!("{}/visu/index.fcgi?00", self.base_url);
         tab.navigate_to(&start_url)
@@ -280,170 +184,30 @@ impl AutoDiscovery {
             return Ok(());
         }
 
-        info!("Not logged in. Attempting automatic login...");
+        info!("");
+        info!("🔐 LOGIN REQUIRED:");
+        info!("   Please login MANUALLY in the Chrome window");
+        info!("   - Enter your email and password");
+        info!("   - Solve CAPTCHA if it appears");
+        info!("   - Click submit");
+        info!("   ");
+        info!("   Waiting for you to complete login (up to 3 minutes)...");
+        info!("");
 
-        // Comprehensive anti-detection JavaScript
-        let stealth_js = r#"
-            // Remove webdriver property
-            Object.defineProperty(navigator, 'webdriver', {
-                get: () => false,
-                configurable: true
-            });
-
-            // Remove automation flags
-            delete navigator.__webdriver_script_fn;
-            delete navigator.__driver_evaluate;
-            delete navigator.__webdriver_evaluate;
-            delete navigator.__selenium_evaluate;
-            delete navigator.__fxdriver_evaluate;
-            delete navigator.__driver_unwrapped;
-            delete navigator.__webdriver_unwrapped;
-            delete navigator.__selenium_unwrapped;
-            delete navigator.__fxdriver_unwrapped;
-
-            // Overwrite the `plugins` property
-            Object.defineProperty(navigator, 'plugins', {
-                get: () => [1, 2, 3, 4, 5]
-            });
-
-            // Overwrite the `languages` property
-            Object.defineProperty(navigator, 'languages', {
-                get: () => ['en-US', 'en']
-            });
-
-            // Add chrome object
-            if (!window.chrome) {
-                window.chrome = {};
-            }
-            window.chrome.runtime = {
-                connect: () => {},
-                sendMessage: () => {}
-            };
-
-            // Mock permissions
-            const originalQuery = window.navigator.permissions.query;
-            window.navigator.permissions.query = (parameters) => (
-                parameters.name === 'notifications' ?
-                    Promise.resolve({ state: Notification.permission }) :
-                    originalQuery(parameters)
-            );
-
-            // Hide automation in toString
-            const originalToString = Function.prototype.toString;
-            Function.prototype.toString = function() {
-                if (this === window.navigator.permissions.query) {
-                    return 'function query() { [native code] }';
-                }
-                return originalToString.call(this);
-            };
-
-            // Remove CDP detection
-            delete Object.getPrototypeOf(navigator).webdriver;
-
-            // Spoof connection type
-            Object.defineProperty(navigator, 'connection', {
-                get: () => ({
-                    effectiveType: '4g',
-                    rtt: 50,
-                    downlink: 10,
-                    saveData: false
-                })
-            });
-
-            // Add realistic platform info
-            Object.defineProperty(navigator, 'platform', {
-                get: () => 'MacIntel'
-            });
-
-            // Mock hardware concurrency
-            Object.defineProperty(navigator, 'hardwareConcurrency', {
-                get: () => 8
-            });
-
-            // Mock device memory
-            Object.defineProperty(navigator, 'deviceMemory', {
-                get: () => 8
-            });
-        "#;
-
-        tab.evaluate(stealth_js, false).ok();
-
-        // Add delay to seem human
-        std::thread::sleep(std::time::Duration::from_secs(2));
-
-        // Random mouse movement after page load
-        self.random_mouse_jitter(tab).ok();
-        std::thread::sleep(Duration::from_millis(500));
-
-        // Maybe scroll a bit
-        self.random_scroll(tab).ok();
-        std::thread::sleep(Duration::from_millis(800));
-
-        tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10))
-            .context("Login page not found")?;
-
-        // Simulate mouse movement to email field
-        self.simulate_mouse_movement(tab, "input[name='email']")?;
-        std::thread::sleep(Duration::from_millis(300));
-
-        // Click and type
-        let email_element = tab.wait_for_element("input[name='email']")?;
-        email_element.click()?;
-        std::thread::sleep(Duration::from_millis(200));
-        email_element.type_into(&self.username)?;
-
-        // Move to password field
-        std::thread::sleep(Duration::from_millis(800));
-        self.simulate_mouse_movement(tab, "input[name='password']")?;
-        std::thread::sleep(Duration::from_millis(250));
-
-        let password_element = tab.wait_for_element("input[name='password']")?;
-        password_element.click()?;
-        std::thread::sleep(Duration::from_millis(200));
-        password_element.type_into(&self.password)?;
-
-        // Move to submit button
-        std::thread::sleep(Duration::from_millis(700));
-        self.simulate_mouse_movement(tab, "button[type='submit']")?;
-        std::thread::sleep(Duration::from_millis(400));
-
-        // Try to find and click submit button
-        match tab.wait_for_element("button[type='submit']") {
-            Ok(submit_button) => {
-                submit_button.click().ok();
-                info!("Submit button clicked, waiting for response...");
-            }
-            Err(_) => {
-                info!("⚠️  Could not find submit button automatically");
-            }
-        }
-
-        // Wait and check if login succeeded
-        std::thread::sleep(Duration::from_secs(5));
-
-        // Check if we're logged in now
-        if self.is_logged_in(tab) {
-            info!("✅ Automatic login successful!");
-            return Ok(());
-        }
-
-        // If automatic login failed, wait for manual intervention
-        info!("⚠️  Automatic login failed or CAPTCHA detected");
-        info!("👤 Please complete the login manually in the Chrome window");
-        info!("   (Solve CAPTCHA if needed, then submit the form)");
-        info!("   Waiting up to 2 minutes for manual login...");
-
-        // Poll for successful login (120 seconds = 2 minutes)
+        // Poll for successful login (180 seconds = 3 minutes)
         let mut attempts = 0;
-        let max_attempts = 120;
+        let max_attempts = 180;
 
         while attempts < max_attempts {
             std::thread::sleep(Duration::from_secs(1));
             attempts += 1;
 
             if self.is_logged_in(tab) {
-                info!("✅ Manual login successful!");
-                info!("   Session saved to chrome_data/ - next run will skip login!");
+                info!("");
+                info!("✅ Login successful!");
+                info!("   Your session has been saved to chrome_data/");
+                info!("   Next time you run this, login will be AUTOMATIC!");
+                info!("");
                 return Ok(());
             }
 
