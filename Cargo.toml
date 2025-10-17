@@ -28,6 +28,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # Utilities
 futures = "0.3"
+rand = "0.8"
 # Headless browser for OAuth login
 headless_chrome = "1.0"
 # Environment variables

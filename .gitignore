@@ -2,6 +2,7 @@
 .env
 device_mappings.toml
 device_mappings_auto.toml
+chrome_data/
 
 # Rust build artifacts
 /target/
