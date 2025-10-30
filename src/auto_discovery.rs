@@ -93,28 +93,71 @@ impl AutoDiscovery {
             user_data_dir: Some(chrome_data),
             window_size: Some((1920, 1080)),
             args: vec![
-                // Hide automation indicators
+                // CRITICAL: Hide automation indicators
                 std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
                 std::ffi::OsStr::new("--exclude-switches=enable-automation"),
                 std::ffi::OsStr::new("--disable-infobars"),
-                std::ffi::OsStr::new("--disable-extensions"),
+
+                // Look like normal browser
                 std::ffi::OsStr::new("--no-first-run"),
                 std::ffi::OsStr::new("--no-default-browser-check"),
                 std::ffi::OsStr::new("--disable-popup-blocking"),
-                // Performance & stealth
+                std::ffi::OsStr::new("--start-maximized"),
+
+                // Remove automation detection
                 std::ffi::OsStr::new("--disable-dev-shm-usage"),
-                std::ffi::OsStr::new("--disable-web-security"),
+                std::ffi::OsStr::new("--disable-setuid-sandbox"),
+
+                // Simulate real user behavior
+                std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
+                std::ffi::OsStr::new("--enable-features=NetworkService,NetworkServiceInProcess"),
                 std::ffi::OsStr::new("--disable-features=IsolateOrigins,site-per-process"),
                 std::ffi::OsStr::new("--disable-site-isolation-trials"),
-                std::ffi::OsStr::new("--start-maximized"),
-                std::ffi::OsStr::new("--disable-setuid-sandbox"),
-                std::ffi::OsStr::new("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
+
+                // User agent
+                std::ffi::OsStr::new("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
             ],
             ..Default::default()
         })
         .context("Failed to launch Chrome")?;
 
         let tab = browser.new_tab().context("Failed to create tab")?;
+
+        // Hide webdriver property and add more stealth to avoid bot detection
+        tab.evaluate(
+            r#"
+            // Hide webdriver
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+
+            // Mock chrome object
+            window.chrome = {
+                runtime: {},
+                loadTimes: function() {},
+                csi: function() {},
+                app: {}
+            };
+
+            // Mock plugins
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5]
+            });
+
+            // Mock languages
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['en-US', 'en', 'de']
+            });
+
+            // Mock permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
+            "#,
+            false,
+        )
+        .ok();
 
         self.login(&tab)?;
 
