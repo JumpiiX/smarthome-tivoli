@@ -277,7 +277,7 @@ impl KnxClient {
         info!("Launching headless Chrome...");
 
         let browser = Browser::new(LaunchOptions {
-            headless: true,
+            headless: false,
             sandbox: false,
             args: vec![
                 std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
