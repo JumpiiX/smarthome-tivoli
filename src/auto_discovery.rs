@@ -86,7 +86,7 @@ impl AutoDiscovery {
         };
 
         let browser = Browser::new(LaunchOptions {
-            headless: false,
+            headless: true,
             sandbox: false,
             user_data_dir: Some(chrome_data),
             window_size: Some((1920, 1080)),
