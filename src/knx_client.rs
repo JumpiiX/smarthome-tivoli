@@ -16,10 +16,11 @@ pub struct KnxClient {
     client: reqwest::Client,
     config: Arc<KnxConfig>,
     session_id: Arc<RwLock<String>>,
+    headless: bool,
 }
 
 impl KnxClient {
-    pub fn new(config: Arc<KnxConfig>) -> Result<Self> {
+    pub fn new(config: Arc<KnxConfig>, headless: bool) -> Result<Self> {
         let client = reqwest::Client::builder()
             .danger_accept_invalid_certs(true)
             .build()
@@ -27,7 +28,7 @@ impl KnxClient {
 
         let session_id = Arc::new(RwLock::new(String::new()));
 
-        Ok(Self { client, config, session_id })
+        Ok(Self { client, config, session_id, headless })
     }
 
     pub async fn validate_session(&self) -> Result<bool> {
@@ -274,10 +275,14 @@ impl KnxClient {
         let password = env::var("SMARTHOME_PASSWORD")
             .context("SMARTHOME_PASSWORD not set in .env")?;
 
-        info!("Launching headless Chrome...");
+        if self.headless {
+            info!("Launching Chrome in headless mode (no window)...");
+        } else {
+            info!("Launching Chrome with GUI...");
+        }
 
         let browser = Browser::new(LaunchOptions {
-            headless: false,
+            headless: self.headless,
             sandbox: false,
             args: vec![
                 std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),

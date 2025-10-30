@@ -30,12 +30,19 @@ async fn main() -> Result<()> {
 
 
     let args: Vec<String> = std::env::args().collect();
-    if args.len() > 1 && args[1] == "--discover" {
+    let headless = args.contains(&"--headless".to_string());
+
+    if args.contains(&"--discover".to_string()) {
         info!("🔍 Running in AUTO-DISCOVERY mode");
         info!("This will automatically find all device commands");
+        if headless {
+            info!("🤖 Headless mode: Chrome will run in background (no window)");
+        } else {
+            info!("🖥️  GUI mode: Chrome window will appear for manual login");
+        }
         info!("");
 
-        let discovery = auto_discovery::AutoDiscovery::new()?;
+        let discovery = auto_discovery::AutoDiscovery::new(headless)?;
         let pages = vec!["01".to_string(), "02".to_string(), "03".to_string(), "04".to_string()];
 
         discovery.discover_all_mappings(&pages).await?;
@@ -58,8 +65,11 @@ async fn main() -> Result<()> {
     info!("Device mappings loaded successfully");
 
     let knx_config = Arc::new(config.knx.clone());
-    let client = Arc::new(KnxClient::new(knx_config)?);
+    let client = Arc::new(KnxClient::new(knx_config, headless)?);
     info!("KNX client initialized");
+    if headless {
+        info!("Running in headless mode (Chrome in background)");
+    }
 
     client.ensure_valid_session().await?;
 

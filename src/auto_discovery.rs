@@ -10,10 +10,11 @@ pub struct AutoDiscovery {
     base_url: String,
     username: String,
     password: String,
+    headless: bool,
 }
 
 impl AutoDiscovery {
-    pub fn new() -> Result<Self> {
+    pub fn new(headless: bool) -> Result<Self> {
         let base_url = env::var("SMARTHOME_BASE_URL")
             .context("SMARTHOME_BASE_URL not set in .env")?;
         let username = env::var("SMARTHOME_USERNAME")
@@ -25,6 +26,7 @@ impl AutoDiscovery {
             base_url,
             username,
             password,
+            headless,
         })
     }
 
@@ -86,7 +88,7 @@ impl AutoDiscovery {
         };
 
         let browser = Browser::new(LaunchOptions {
-            headless: false,
+            headless: self.headless,
             sandbox: false,
             user_data_dir: Some(chrome_data),
             window_size: Some((1920, 1080)),
