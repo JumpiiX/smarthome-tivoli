@@ -186,46 +186,8 @@ impl AutoDiscovery {
             return Ok(());
         }
 
-        // Try automatic login first
-        info!("🔐 Attempting automatic login with credentials from .env...");
-
-        match tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(5)) {
-            Ok(_) => {
-                info!("Filling email field...");
-                if let Ok(email_element) = tab.wait_for_element("input[name='email']") {
-                    if email_element.type_into(&self.username).is_ok() {
-                        info!("Filling password field...");
-                        if let Ok(password_element) = tab.wait_for_element("input[name='password']") {
-                            if password_element.type_into(&self.password).is_ok() {
-                                info!("Submitting login form...");
-                                if let Ok(submit_button) = tab.wait_for_element("button[type='submit']") {
-                                    submit_button.click().ok();
-
-                                    // Wait for login to complete
-                                    info!("Waiting for login redirect...");
-                                    for _ in 0..20 {
-                                        std::thread::sleep(Duration::from_secs(1));
-                                        if self.is_logged_in(tab) {
-                                            info!("✅ Automatic login successful!");
-                                            info!("   Your session has been saved to chrome_data/");
-                                            return Ok(());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            Err(_) => {
-                info!("⚠️  Login form not found, may already be logged in");
-            }
-        }
-
-        // If automatic login failed, fall back to manual login
         info!("");
-        info!("⚠️  Automatic login failed or CAPTCHA detected");
-        info!("🔐 MANUAL LOGIN REQUIRED:");
+        info!("🔐 LOGIN REQUIRED:");
         info!("   Please login MANUALLY in the Chrome window");
         info!("   - Enter your email and password");
         info!("   - Solve CAPTCHA if it appears");
