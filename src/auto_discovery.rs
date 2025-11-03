@@ -92,6 +92,7 @@ impl AutoDiscovery {
             sandbox: false,
             user_data_dir: Some(chrome_data),
             window_size: Some((1920, 1080)),
+            idle_browser_timeout: Duration::from_secs(300), // 5 minutes timeout (instead of default 30 seconds)
             args: vec![
                 // CRITICAL: Hide automation indicators
                 std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
