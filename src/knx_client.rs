@@ -281,14 +281,40 @@ impl KnxClient {
             info!("Launching Chrome with GUI...");
         }
 
+        // Use persistent Chrome profile like discovery mode does
+        let chrome_data = std::env::current_dir()?.join("chrome_data");
+        std::fs::create_dir_all(&chrome_data)?;
+        info!("Using persistent chrome_data/ profile for session storage");
+
         let browser = Browser::new(LaunchOptions {
             headless: self.headless,
             sandbox: false,
+            user_data_dir: Some(chrome_data),
+            window_size: Some((1920, 1080)),
+            idle_browser_timeout: Duration::from_secs(300), // 5 minutes timeout
             args: vec![
+                // CRITICAL: Hide automation indicators
                 std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
+                std::ffi::OsStr::new("--exclude-switches=enable-automation"),
+                std::ffi::OsStr::new("--disable-infobars"),
+                
+                // Look like normal browser
+                std::ffi::OsStr::new("--no-first-run"),
+                std::ffi::OsStr::new("--no-default-browser-check"),
+                std::ffi::OsStr::new("--disable-popup-blocking"),
+                std::ffi::OsStr::new("--start-maximized"),
+                
+                // Remove automation detection
                 std::ffi::OsStr::new("--disable-dev-shm-usage"),
-                std::ffi::OsStr::new("--disable-web-security"),
-                std::ffi::OsStr::new("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"),
+                std::ffi::OsStr::new("--disable-setuid-sandbox"),
+                
+                // Simulate real user behavior
+                std::ffi::OsStr::new("--enable-features=NetworkService,NetworkServiceInProcess"),
+                std::ffi::OsStr::new("--disable-features=IsolateOrigins,site-per-process"),
+                std::ffi::OsStr::new("--disable-site-isolation-trials"),
+                
+                // User agent
+                std::ffi::OsStr::new("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
             ],
             ..Default::default()
         })
@@ -296,20 +322,105 @@ impl KnxClient {
 
         let tab = browser.new_tab().context("Failed to create new tab")?;
 
-        let start_url = format!("{}/visu/index.fcgi?00", self.config.base_url);
-        info!("Navigating to OAuth login page...");
-        tab.navigate_to(&start_url)
-            .context("Failed to navigate to start URL")?;
-
+        // Hide webdriver property and add more stealth to avoid bot detection
         tab.evaluate(
-            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
+            r#"
+            // Hide webdriver
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            
+            // Mock chrome object
+            window.chrome = {
+                runtime: {},
+                loadTimes: function() {},
+                csi: function() {},
+                app: {}
+            };
+            
+            // Mock plugins
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5]
+            });
+            
+            // Mock languages
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['en-US', 'en', 'de']
+            });
+            
+            // Mock permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
+            "#,
             false,
         )
         .ok();
 
-        info!("Waiting for login page...");
-        tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10))
-            .context("Login page email field not found")?;
+        let start_url = format!("{}/visu/index.fcgi?00", self.config.base_url);
+        info!("Navigating to login page...");
+        tab.navigate_to(&start_url)
+            .context("Failed to navigate to start URL")?;
+
+        std::thread::sleep(Duration::from_secs(3));
+
+        // Check if already logged in by looking for logout button or main UI
+        let check_js = r#"
+            (function() {
+                // Check if login form exists
+                const hasLoginForm = !!document.querySelector('input[name="email"]');
+                // Check if we're on the main visu page
+                const hasVisuElements = !!document.querySelector('[data-index]') || 
+                                       !!document.querySelector('.visu-icon') ||
+                                       window.location.pathname.includes('/visu/');
+                
+                return !hasLoginForm && hasVisuElements;
+            })();
+        "#;
+
+        let is_logged_in = tab.evaluate(check_js, false)
+            .ok()
+            .and_then(|result| result.value)
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        if is_logged_in {
+            info!("✅ Already logged in! (Session restored from chrome_data/)");
+            
+            // Extract session ID from current URL
+            let current_url = tab.get_url();
+            if current_url.contains("session_id=") {
+                let new_session_id = self.extract_session_id(&current_url)
+                    .context("Failed to extract session_id from current URL")?;
+                
+                let mut session_id = self.session_id.write().await;
+                *session_id = new_session_id.to_string();
+                info!("Session ID extracted from existing session");
+                return Ok(());
+            }
+        }
+
+        info!("Not logged in, attempting automatic login...");
+        
+        // Wait for login page to load
+        match tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10)) {
+            Ok(_) => info!("Login page loaded, filling credentials..."),
+            Err(_) => {
+                // Maybe we're already past login, check the URL
+                let current_url = tab.get_url();
+                if current_url.contains("session_id=") {
+                    let new_session_id = self.extract_session_id(&current_url)
+                        .context("Failed to extract session_id")?;
+                    
+                    let mut session_id = self.session_id.write().await;
+                    *session_id = new_session_id.to_string();
+                    info!("Already logged in, session extracted");
+                    return Ok(());
+                }
+                return Err(anyhow::anyhow!("Login page not found and no session detected"));
+            }
+        };
 
         info!("Filling email field...");
         let email_element = tab.wait_for_element("input[name='email']")
