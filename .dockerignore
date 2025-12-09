@@ -1,10 +1,42 @@
+# Rust build artifacts
 target/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Chrome data (will be created fresh in container)
+chrome_data/
+
+# Environment files (secrets should be passed via K8s)
 .env
+.env.local
+.env.production
+
+# Git files
 .git/
 .gitignore
-*.toml
-!Cargo.toml
-homebridge/
-homebridge-knx-bridge/node_modules/
+
+# Documentation
 *.md
-.DS_Store
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Homebridge files (not needed in main app container)
+homebridge/
+homebridge-knx-bridge/
+
+# Allow Cargo.toml and device mappings
+!Cargo.toml
+!device_mappings.toml

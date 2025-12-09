@@ -1,7 +1,7 @@
 # Sensitive files - DO NOT COMMIT
 .env
 device_mappings.toml
-device_mappings_auto.toml
+device_mappings.toml
 chrome_data/
 
 # Rust build artifacts

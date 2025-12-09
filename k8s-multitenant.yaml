@@ -1,0 +1,126 @@
+---
+# Namespace for your apartment (main tenant)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apartment-main
+  labels:
+    tenant: apartment-main
+    monitoring: enabled
+    apartment-id: "001"
+
+---
+# Your main apartment KNX Bridge (real instance)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: knx-homekit-bridge
+  namespace: apartment-main
+  labels:
+    app: knx-homekit-bridge
+    tenant: apartment-main
+    apartment-type: "real"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: knx-homekit-bridge
+      tenant: apartment-main
+  template:
+    metadata:
+      labels:
+        app: knx-homekit-bridge
+        tenant: apartment-main
+        apartment-type: "real"
+    spec:
+      containers:
+      - name: knx-homekit-bridge
+        image: knx-homekit-bridge:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SMARTHOME_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: knx-credentials
+              key: username
+        - name: SMARTHOME_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: knx-credentials
+              key: password
+        - name: RUST_LOG
+          value: "info,knx_homekit_bridge=debug"
+        - name: TENANT_ID
+          value: "apartment-main"
+        - name: APARTMENT_ID
+          value: "001"
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        volumeMounts:
+        - name: chrome-data
+          mountPath: /app/chrome_data
+      volumes:
+      - name: chrome-data
+        emptyDir: {}
+
+---
+# Service for your main apartment
+apiVersion: v1
+kind: Service
+metadata:
+  name: knx-homekit-bridge-service
+  namespace: apartment-main
+  labels:
+    tenant: apartment-main
+spec:
+  selector:
+    app: knx-homekit-bridge
+    tenant: apartment-main
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
+
+---
+# Secrets for your main apartment (real credentials)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: knx-credentials
+  namespace: apartment-main
+type: Opaque
+data:
+  # Base64 encoded credentials - UPDATE THESE WITH YOUR REAL CREDENTIALS
+  username: "your_real_username_base64"
+  password: "your_real_password_base64"
+
+---
+# NetworkPolicy for apartment isolation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: apartment-isolation
+  namespace: apartment-main
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: apartment-main
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: apartment-main
+  - to: [] # Allow egress to internet for KNX connectivity
