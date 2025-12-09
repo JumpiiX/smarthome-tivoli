@@ -88,18 +88,7 @@ spec:
     targetPort: 8080
   type: ClusterIP
 
----
-# Secrets for your main apartment (real credentials)
-apiVersion: v1
-kind: Secret
-metadata:
-  name: knx-credentials
-  namespace: apartment-main
-type: Opaque
-data:
-  # Base64 encoded credentials - UPDATE THESE WITH YOUR REAL CREDENTIALS
-  username: "your_real_username_base64"
-  password: "your_real_password_base64"
+# Secrets will be created using Sealed Secrets - see secrets/ directory
 
 ---
 # NetworkPolicy for apartment isolation

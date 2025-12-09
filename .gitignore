@@ -1,8 +1,12 @@
 # Sensitive files - DO NOT COMMIT
 .env
-device_mappings.toml
+.env.local
 device_mappings.toml
 chrome_data/
+
+# Temporary secret files
+temp-secret.yaml
+*.tmp
 
 # Rust build artifacts
 /target/

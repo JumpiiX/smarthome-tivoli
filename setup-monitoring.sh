@@ -12,6 +12,14 @@ if ! command -v kubectl &> /dev/null; then
     exit 1
 fi
 
+# Install Sealed Secrets Controller first
+echo "🔐 Setting up Sealed Secrets Controller..."
+kubectl apply -f secrets/sealed-secrets-controller.yaml
+
+# Wait for sealed secrets controller
+echo "⏳ Waiting for Sealed Secrets Controller..."
+kubectl wait --for=condition=available --timeout=300s deployment/sealed-secrets-controller -n kube-system || true
+
 # Create monitoring namespace
 echo "📁 Creating monitoring namespace..."
 kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
@@ -69,11 +77,10 @@ echo "   • Grafana:           http://localhost:3000 (admin/admin123)"
 echo "   • Prometheus:        http://localhost:9090"
 echo "   • Your Apartment:    http://localhost:8080"
 echo ""
-echo "🔧 To update YOUR credentials:"
-echo "   kubectl create secret generic knx-credentials \\"
-echo "     --from-literal=username='your_real_username' \\"
-echo "     --from-literal=password='your_real_password' \\"
-echo "     -n apartment-main --dry-run=client -o yaml | kubectl apply -f -"
+echo "🔧 To set up YOUR credentials (run once):"
+echo "   export SMARTHOME_USERNAME='your_real_username'"
+echo "   export SMARTHOME_PASSWORD='your_real_password'"
+echo "   cd secrets && ./create-sealed-secret.sh"
 echo ""
 echo "🏠 To add neighbors for monitoring demo:"
 echo "   ./add-neighbor.sh 002 smith      # Add one neighbor"

@@ -70,16 +70,4 @@ spec:
     port: 8080
     targetPort: 8080
   type: ClusterIP
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: knx-credentials
-type: Opaque
-data:
-  # Base64 encoded username and password
-  # Update these with your actual credentials
-  # echo -n "your_username" | base64
-  # echo -n "your_password" | base64
-  username: "your_username_base64_here"
-  password: "your_password_base64_here"
+# Secrets managed by Sealed Secrets - see secrets/ directory
