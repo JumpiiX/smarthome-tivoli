@@ -47,25 +47,20 @@ impl AutoDiscovery {
 
         info!("Launching Chrome...");
 
-        // Check if user wants to use system Chrome profile
         let use_system_profile = env::var("USE_SYSTEM_CHROME").is_ok();
 
         let chrome_data = if use_system_profile {
-            // Try to use the system's default Chrome profile for better stealth
             let system_profile = if cfg!(target_os = "windows") {
-                // Windows: C:\Users\USERNAME\AppData\Local\Google\Chrome\User Data
                 let username = env::var("USERNAME").unwrap_or_else(|_| "Administrator".to_string());
                 std::path::PathBuf::from(format!(
                     "C:\\Users\\{username}\\AppData\\Local\\Google\\Chrome\\User Data"
                 ))
             } else if cfg!(target_os = "macos") {
-                // macOS: ~/Library/Application Support/Google/Chrome
                 let home = env::var("HOME").unwrap_or_else(|_| "/Users".to_string());
                 std::path::PathBuf::from(format!(
                     "{home}/Library/Application Support/Google/Chrome"
                 ))
             } else {
-                // Linux: ~/.config/google-chrome
                 let home = env::var("HOME").unwrap_or_else(|_| "/home".to_string());
                 std::path::PathBuf::from(format!("{home}/.config/google-chrome"))
             };
@@ -80,7 +75,6 @@ impl AutoDiscovery {
                 local_data
             }
         } else {
-            // Use local profile by default (more reliable)
             info!("Using dedicated chrome_data/ profile (set USE_SYSTEM_CHROME=1 to use real profile)");
             let local_data = std::env::current_dir()?.join("chrome_data");
             std::fs::create_dir_all(&local_data)?;
@@ -92,30 +86,25 @@ impl AutoDiscovery {
             sandbox: false,
             user_data_dir: Some(chrome_data),
             window_size: Some((1920, 1080)),
-            idle_browser_timeout: Duration::from_secs(300), // 5 minutes timeout (instead of default 30 seconds)
+            idle_browser_timeout: Duration::from_secs(300),
             args: vec![
-                // CRITICAL: Hide automation indicators
                 std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
                 std::ffi::OsStr::new("--exclude-switches=enable-automation"),
                 std::ffi::OsStr::new("--disable-infobars"),
 
-                // Look like normal browser
                 std::ffi::OsStr::new("--no-first-run"),
                 std::ffi::OsStr::new("--no-default-browser-check"),
                 std::ffi::OsStr::new("--disable-popup-blocking"),
                 std::ffi::OsStr::new("--start-maximized"),
 
-                // Remove automation detection
                 std::ffi::OsStr::new("--disable-dev-shm-usage"),
                 std::ffi::OsStr::new("--disable-setuid-sandbox"),
 
-                // Simulate real user behavior
                 std::ffi::OsStr::new("--disable-blink-features=AutomationControlled"),
                 std::ffi::OsStr::new("--enable-features=NetworkService,NetworkServiceInProcess"),
                 std::ffi::OsStr::new("--disable-features=IsolateOrigins,site-per-process"),
                 std::ffi::OsStr::new("--disable-site-isolation-trials"),
 
-                // User agent
                 std::ffi::OsStr::new("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
             ],
             ..Default::default()
@@ -124,7 +113,6 @@ impl AutoDiscovery {
 
         let tab = browser.new_tab().context("Failed to create tab")?;
 
-        // Hide webdriver property and add more stealth to avoid bot detection
         tab.evaluate(
             "
             Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
@@ -187,14 +175,10 @@ impl AutoDiscovery {
         Ok(all_mappings)
     }
 
-    // Check if already logged in by looking for logout button or main UI
     fn is_logged_in(&self, tab: &headless_chrome::Tab) -> bool {
-        // Check if we're already on the main page (not login page)
         let check_js = r#"
             (function() {
-                // Check if login form exists
                 const hasLoginForm = !!document.querySelector('input[name="email"]');
-                // Check if we're on the main visu page
                 const hasVisuElements = !!document.querySelector('[data-index]') ||
                                        !!document.querySelector('.visu-icon') ||
                                        window.location.pathname.includes('/visu/');
@@ -219,7 +203,6 @@ impl AutoDiscovery {
 
         std::thread::sleep(Duration::from_secs(3));
 
-        // Check if already logged in
         if self.is_logged_in(tab) {
             info!("✅ Already logged in! (Session restored from chrome_data/)");
             return Ok(());
@@ -235,7 +218,6 @@ impl AutoDiscovery {
         info!("   Waiting for you to complete login (up to 3 minutes)...");
         info!("");
 
-        // Poll for successful login (180 seconds = 3 minutes)
         let mut attempts = 0;
         let max_attempts = 180;
 
@@ -252,7 +234,6 @@ impl AutoDiscovery {
                 return Ok(());
             }
 
-            // Show progress every 15 seconds
             if attempts % 15 == 0 {
                 info!("   Still waiting... ({}/{} seconds)", attempts, max_attempts);
             }
