@@ -236,7 +236,7 @@ async fn set_blind_position(
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
-                    error: format!("Failed to set blind position: {}", e),
+                    error: format!("Failed to set blind position: {e}"),
                 }),
             )
                 .into_response()
