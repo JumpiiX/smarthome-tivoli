@@ -226,7 +226,7 @@ async fn set_blind_position(
     info!("API: Blind position request for {} to {}%", key, payload.position);
 
     match state.state_manager.set_blind_position(&key, payload.position).await {
-        Ok(_) => (
+        Ok(()) => (
             StatusCode::OK,
             Json(serde_json::json!({"status": "ok", "device": key, "position": payload.position})),
         )
