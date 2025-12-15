@@ -200,7 +200,7 @@ async fn toggle_device(
     info!("API: Toggle request for {} to {}", key, payload.on);
 
     match state.state_manager.toggle_device(&key, payload.on).await {
-        Ok(_) => (
+        Ok(()) => (
             StatusCode::OK,
             Json(serde_json::json!({"status": "ok", "device": key, "on": payload.on})),
         )
