@@ -106,7 +106,7 @@ pub async fn start_api_server(state_manager: Arc<StateManager>, port: u16) -> Re
         .layer(cors)
         .with_state(state);
 
-    let addr = format!("0.0.0.0:{}", port);
+    let addr = format!("0.0.0.0:{port}");
     info!("🌐 HTTP API server listening on http://{}", addr);
     info!("   API endpoints:");
     info!("   - GET  /devices                List all devices");
