@@ -11,7 +11,7 @@ use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{info, warn};
 
-use crate::device::{Device, DeviceState, DeviceType};
+use crate::device::{Device, DeviceState};
 use crate::state_manager::StateManager;
 
 #[derive(Clone)]
