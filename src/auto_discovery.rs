@@ -126,11 +126,9 @@ impl AutoDiscovery {
 
         // Hide webdriver property and add more stealth to avoid bot detection
         tab.evaluate(
-            r#"
-            // Hide webdriver
+            r"
             Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
 
-            // Mock chrome object
             window.chrome = {
                 runtime: {},
                 loadTimes: function() {},
@@ -138,24 +136,21 @@ impl AutoDiscovery {
                 app: {}
             };
 
-            // Mock plugins
             Object.defineProperty(navigator, 'plugins', {
                 get: () => [1, 2, 3, 4, 5]
             });
 
-            // Mock languages
             Object.defineProperty(navigator, 'languages', {
                 get: () => ['en-US', 'en', 'de']
             });
 
-            // Mock permissions
             const originalQuery = window.navigator.permissions.query;
             window.navigator.permissions.query = (parameters) => (
                 parameters.name === 'notifications' ?
                     Promise.resolve({ state: Notification.permission }) :
                     originalQuery(parameters)
             );
-            "#,
+            ",
             false,
         )
         .ok();
