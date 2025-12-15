@@ -166,7 +166,7 @@ async fn get_device(
         None => (
             StatusCode::NOT_FOUND,
             Json(ErrorResponse {
-                error: format!("Device not found: {}", key),
+                error: format!("Device not found: {key}"),
             }),
         )
             .into_response(),
