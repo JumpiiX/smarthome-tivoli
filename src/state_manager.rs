@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 use crate::command_mapper::CommandMapper;
 use crate::device::{Device, DeviceRegistry, DeviceState};
@@ -115,7 +115,7 @@ impl StateManager {
         };
 
         let base_key = CommandMapper::device_key(&device_id, &page);
-        let command_key = format!("{}_{}", base_key, command_suffix);
+        let command_key = format!("{base_key}_{command_suffix}");
 
         let command = self.command_mapper.command_cache.get(&command_key).ok_or_else(|| {
             anyhow::anyhow!("No command mapping found for blind: {} ({})", device_key, command_suffix)

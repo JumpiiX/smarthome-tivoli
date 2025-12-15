@@ -10,12 +10,15 @@ pub struct Config {
 #[derive(Debug, Clone)]
 pub struct KnxConfig {
     pub base_url: String,
+    #[allow(dead_code)]
     pub pages: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct HomeKitConfig {
+    #[allow(dead_code)]
     pub name: String,
+    #[allow(dead_code)]
     pub pin: String,
     pub port: u16,
 }

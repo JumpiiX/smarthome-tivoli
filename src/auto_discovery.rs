@@ -8,7 +8,9 @@ use tracing::info;
 
 pub struct AutoDiscovery {
     base_url: String,
+    #[allow(dead_code)]
     username: String,
+    #[allow(dead_code)]
     password: String,
     headless: bool,
 }
@@ -54,20 +56,18 @@ impl AutoDiscovery {
                 // Windows: C:\Users\USERNAME\AppData\Local\Google\Chrome\User Data
                 let username = env::var("USERNAME").unwrap_or_else(|_| "Administrator".to_string());
                 std::path::PathBuf::from(format!(
-                    "C:\\Users\\{}\\AppData\\Local\\Google\\Chrome\\User Data",
-                    username
+                    "C:\\Users\\{username}\\AppData\\Local\\Google\\Chrome\\User Data"
                 ))
             } else if cfg!(target_os = "macos") {
                 // macOS: ~/Library/Application Support/Google/Chrome
                 let home = env::var("HOME").unwrap_or_else(|_| "/Users".to_string());
                 std::path::PathBuf::from(format!(
-                    "{}/Library/Application Support/Google/Chrome",
-                    home
+                    "{home}/Library/Application Support/Google/Chrome"
                 ))
             } else {
                 // Linux: ~/.config/google-chrome
                 let home = env::var("HOME").unwrap_or_else(|_| "/home".to_string());
-                std::path::PathBuf::from(format!("{}/.config/google-chrome", home))
+                std::path::PathBuf::from(format!("{home}/.config/google-chrome"))
             };
 
             if system_profile.exists() {
@@ -126,7 +126,7 @@ impl AutoDiscovery {
 
         // Hide webdriver property and add more stealth to avoid bot detection
         tab.evaluate(
-            r"
+            "
             Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
 
             window.chrome = {
@@ -264,7 +264,7 @@ impl AutoDiscovery {
     fn discover_page(&self, tab: &headless_chrome::Tab, page: &str) -> Result<HashMap<String, String>> {
         let mut mappings = HashMap::new();
 
-        let page_url = format!("{}/visu/index.fcgi?{}", self.base_url, page);
+        let page_url = format!("{}/visu/index.fcgi?{page}", self.base_url);
         tab.navigate_to(&page_url)?;
 
         std::thread::sleep(Duration::from_secs(3));
@@ -362,7 +362,7 @@ impl AutoDiscovery {
         let mut switches = HashMap::new();
 
         for (key, command) in mappings {
-            let clean_key = key.split("_icon-").next().unwrap_or(&key).to_string();
+            let clean_key = key.split("_icon-").next().unwrap_or(key).to_string();
 
             if key.contains("Double3") {
                 blinds.insert(clean_key, command.clone());
@@ -390,7 +390,7 @@ impl AutoDiscovery {
             for (key, cmd) in lights {
                 content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         if !blinds.is_empty() {
@@ -398,7 +398,7 @@ impl AutoDiscovery {
             for (key, cmd) in blinds {
                 content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         if !dimmers.is_empty() {
@@ -406,7 +406,7 @@ impl AutoDiscovery {
             for (key, cmd) in dimmers {
                 content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         if !ventilation.is_empty() {
@@ -414,7 +414,7 @@ impl AutoDiscovery {
             for (key, cmd) in ventilation {
                 content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         if !scenes.is_empty() {
@@ -422,15 +422,15 @@ impl AutoDiscovery {
             for (key, cmd) in scenes {
                 content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         if !sensors.is_empty() {
             content.push_str("[sensors]\n");
-            for (key, cmd) in sensors {
+            for (key, _cmd) in sensors {
                 content.push_str(&format!("\"{}\" = \"READONLY\"\n", key));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         if !switches.is_empty() {
@@ -438,7 +438,7 @@ impl AutoDiscovery {
             for (key, cmd) in switches {
                 content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
             }
-            content.push_str("\n");
+            content.push('\n');
         }
 
         fs::write("device_mappings_auto.toml", content)

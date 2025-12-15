@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceMappings {
@@ -24,6 +24,7 @@ pub struct DeviceMappings {
 }
 
 pub struct CommandMapper {
+    #[allow(dead_code)]
     mappings: DeviceMappings,
     pub command_cache: HashMap<String, String>,
 }
@@ -56,7 +57,7 @@ impl CommandMapper {
         if device_id.contains("_page") {
             device_id.to_string()
         } else {
-            format!("{}_page{}", device_id, page)
+            format!("{device_id}_page{page}")
         }
     }
 
@@ -76,6 +77,7 @@ impl CommandMapper {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_blind_commands(&self, device_id: &str, page: &str) -> Option<BlindCommands> {
         let base_key = Self::device_key(device_id, page);
 
@@ -94,17 +96,20 @@ impl CommandMapper {
         })
     }
 
+    #[allow(dead_code)]
     pub fn is_readonly(&self, device_id: &str, page: &str) -> bool {
         let key = Self::device_key(device_id, page);
         self.command_cache.get(&key).map(|cmd| cmd == "READONLY").unwrap_or(false)
     }
 
+    #[allow(dead_code)]
     pub fn all_keys(&self) -> Vec<String> {
         self.command_cache.keys().cloned().collect()
     }
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct BlindCommands {
     pub up: String,
     pub stop: String,

@@ -108,11 +108,13 @@ impl DeviceRegistry {
         self.devices.get_mut(key)
     }
 
+    #[allow(dead_code)]
     pub fn get_by_id_page(&self, id: &str, page: &str) -> Option<&Device> {
         let key = crate::command_mapper::CommandMapper::device_key(id, page);
         self.devices.get(&key)
     }
 
+    #[allow(dead_code)]
     pub fn get_mut_by_id_page(&mut self, id: &str, page: &str) -> Option<&mut Device> {
         let key = crate::command_mapper::CommandMapper::device_key(id, page);
         self.devices.get_mut(&key)
@@ -122,6 +124,7 @@ impl DeviceRegistry {
         self.devices.values()
     }
 
+    #[allow(dead_code)]
     pub fn all_mut(&mut self) -> impl Iterator<Item = &mut Device> {
         self.devices.values_mut()
     }

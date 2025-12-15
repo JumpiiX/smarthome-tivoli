@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
 use headless_chrome::{Browser, LaunchOptions};
 use scraper::{Html, Selector};
-use serde::{Deserialize, Serialize};
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
@@ -31,6 +30,7 @@ impl KnxClient {
         Ok(Self { client, config, session_id, headless })
     }
 
+    #[allow(dead_code)]
     pub async fn validate_session(&self) -> Result<bool> {
         let url = {
             let session_id = self.session_id.read().await;
@@ -443,7 +443,7 @@ impl KnxClient {
         info!("Waiting for redirect to SmartHome...");
         let mut attempts = 0;
         let max_attempts = 20;
-        let mut final_url = String::new();
+        let mut final_url;
 
         loop {
             std::thread::sleep(Duration::from_secs(1));
