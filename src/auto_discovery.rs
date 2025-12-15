@@ -272,7 +272,7 @@ impl AutoDiscovery {
         let count_script = "document.querySelectorAll('[data-index][data-page]').length";
         let count_result = tab.evaluate(count_script, false)?;
         info!("  Found {} elements with data-index and data-page", count_result.value.as_ref().unwrap_or(&serde_json::Value::Number(0.into())));
-        let script = r#"
+        let script = r"
             JSON.stringify(
                 Array.from(document.querySelectorAll('[data-index][data-page]')).map(function(el) {
                     const iconButton = el.querySelector('.visu-icon');
@@ -289,7 +289,7 @@ impl AutoDiscovery {
                     };
                 })
             )
-        "#;
+        ";
 
         info!("  Extracting device information from HTML...");
         let elements = tab.evaluate(script, false)?;
