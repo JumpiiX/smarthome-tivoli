@@ -210,7 +210,7 @@ async fn toggle_device(
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
-                    error: format!("Failed to toggle device: {}", e),
+                    error: format!("Failed to toggle device: {e}"),
                 }),
             )
                 .into_response()
