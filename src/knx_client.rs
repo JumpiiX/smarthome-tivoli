@@ -258,6 +258,7 @@ impl KnxClient {
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     async fn refresh_session(&self) -> Result<()> {
         info!("Refreshing session using headless browser...");
 
