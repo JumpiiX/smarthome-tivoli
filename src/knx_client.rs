@@ -311,7 +311,7 @@ impl KnxClient {
         let tab = browser.new_tab().context("Failed to create new tab")?;
 
         tab.evaluate(
-            r#"
+            r"
             Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
             
             window.chrome = {
@@ -335,7 +335,7 @@ impl KnxClient {
                     Promise.resolve({ state: Notification.permission }) :
                     originalQuery(parameters)
             );
-            "#,
+            ",
             false,
         )
         .ok();
