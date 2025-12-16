@@ -45,7 +45,7 @@ async fn main() -> Result<()> {
         let discovery = auto_discovery::AutoDiscovery::new(headless)?;
         let pages = vec!["01".to_string(), "02".to_string(), "03".to_string(), "04".to_string()];
 
-        discovery.discover_all_mappings(&pages).await?;
+        discovery.discover_all_mappings(&pages)?;
 
         info!("");
         info!("✅ Auto-discovery complete!");

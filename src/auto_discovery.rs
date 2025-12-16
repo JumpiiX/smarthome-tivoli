@@ -33,7 +33,7 @@ impl AutoDiscovery {
         })
     }
 
-    pub async fn discover_all_mappings(&self, _pages: &[String]) -> Result<HashMap<String, String>> {
+    pub fn discover_all_mappings(&self, _pages: &[String]) -> Result<HashMap<String, String>> {
         info!("🔍 Starting auto-discovery mode...");
         info!("Auto-detecting all pages with devices...");
         info!("");
