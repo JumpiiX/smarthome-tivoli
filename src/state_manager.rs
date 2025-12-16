@@ -53,27 +53,29 @@ impl StateManager {
     pub async fn toggle_device(&self, device_key: &str, target_state: bool) -> Result<()> {
         let current_state = {
             let registry = self.registry.read().await;
-            registry.get(device_key).map(|d| d.is_on())
+            registry.get(device_key).map(super::device::Device::is_on)
         };
 
-        let current = match current_state {
-            Some(state) => state,
-            None => {
-                return Err(anyhow::anyhow!("Device not found: {}", device_key));
-            }
-        };
+        let Some(current) = current_state else {
+                return Err(anyhow::anyhow!("Device not found: {device_key}"));
+            };
 
         let (device_id, page) = {
             let registry = self.registry.read().await;
             let device = registry.get(device_key).ok_or_else(|| {
-                anyhow::anyhow!("Device not found: {}", device_key)
+                anyhow::anyhow!("Device not found: {device_key}")
             })?;
             (device.id.clone(), device.page.clone())
         };
 
-        if current != target_state {
+        if current == target_state {
+            debug!(
+                "Device {} [key: {}] already in desired state: {}",
+                device_id, device_key, target_state
+            );
+        } else {
             let command = self.command_mapper.get_command(&device_id, &page).ok_or_else(|| {
-                anyhow::anyhow!("No command mapping found for device: {} (page: {})", device_id, page)
+                anyhow::anyhow!("No command mapping found for device: {device_id} (page: {page})")
             })?;
 
             info!(
@@ -87,11 +89,6 @@ impl StateManager {
             if let Some(device) = registry.get_mut(device_key) {
                 device.set_on(target_state);
             }
-        } else {
-            debug!(
-                "Device {} [key: {}] already in desired state: {}",
-                device_id, device_key, target_state
-            );
         }
 
         Ok(())
@@ -101,7 +98,7 @@ impl StateManager {
         let (device_id, page) = {
             let registry = self.registry.read().await;
             let device = registry.get(device_key).ok_or_else(|| {
-                anyhow::anyhow!("Device not found: {}", device_key)
+                anyhow::anyhow!("Device not found: {device_key}")
             })?;
             (device.id.clone(), device.page.clone())
         };
@@ -118,7 +115,7 @@ impl StateManager {
         let command_key = format!("{base_key}_{command_suffix}");
 
         let command = self.command_mapper.command_cache.get(&command_key).ok_or_else(|| {
-            anyhow::anyhow!("No command mapping found for blind: {} ({})", device_key, command_suffix)
+            anyhow::anyhow!("No command mapping found for blind: {device_key} ({command_suffix})")
         })?;
 
         info!(
