@@ -370,7 +370,7 @@ impl KnxClient {
                     .context("Failed to extract session_id from current URL")?;
                 
                 let mut session_id = self.session_id.write().await;
-                *session_id = new_session_id.to_string();
+                *session_id = new_session_id.clone();
                 info!("Session ID extracted from existing session");
                 return Ok(());
             }
@@ -378,22 +378,19 @@ impl KnxClient {
 
         info!("Not logged in, attempting automatic login...");
         
-        match tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10)) {
-            Ok(_) => info!("Login page loaded, filling credentials..."),
-            Err(_) => {
-                let current_url = tab.get_url();
-                if current_url.contains("session_id=") {
-                    let new_session_id = Self::extract_session_id(&current_url)
-                        .context("Failed to extract session_id")?;
-                    
-                    let mut session_id = self.session_id.write().await;
-                    *session_id = new_session_id.to_string();
-                    info!("Already logged in, session extracted");
-                    return Ok(());
-                }
-                return Err(anyhow::anyhow!("Login page not found and no session detected"));
+        if let Ok(_) = tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10)) { info!("Login page loaded, filling credentials...") } else {
+            let current_url = tab.get_url();
+            if current_url.contains("session_id=") {
+                let new_session_id = Self::extract_session_id(&current_url)
+                    .context("Failed to extract session_id")?;
+                
+                let mut session_id = self.session_id.write().await;
+                *session_id = new_session_id.clone();
+                info!("Already logged in, session extracted");
+                return Ok(());
             }
-        };
+            return Err(anyhow::anyhow!("Login page not found and no session detected"));
+        }
 
         info!("Filling email field...");
         let email_element = tab.wait_for_element("input[name='email']")
@@ -430,8 +427,7 @@ impl KnxClient {
             attempts += 1;
             if attempts >= max_attempts {
                 return Err(anyhow::anyhow!(
-                    "Login failed: redirect timeout. Still at: {}",
-                    final_url
+                    "Login failed: redirect timeout. Still at: {final_url}"
                 ));
             }
 
@@ -446,7 +442,7 @@ impl KnxClient {
         info!("New session ID obtained: [REDACTED]");
 
         let mut session_id = self.session_id.write().await;
-        *session_id = new_session_id.to_string();
+        *session_id = new_session_id.clone();
 
         info!("Session ready!");
 
@@ -467,7 +463,7 @@ impl KnxClient {
 
             Ok(session_id)
         } else {
-            Err(anyhow::anyhow!("No session_id found in URL: {}", url))
+            Err(anyhow::anyhow!("No session_id found in URL: {url}"))
         }
     }
 }
