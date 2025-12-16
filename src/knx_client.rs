@@ -124,14 +124,14 @@ impl KnxClient {
             };
             let response = self.client.get(&url).send().await?;
             let html = response.text().await?;
-            return self.parse_devices(&html, page);
+            return Ok(self.parse_devices(&html, page));
         }
 
         let html = response.text().await?;
-        self.parse_devices(&html, page)
+        Ok(self.parse_devices(&html, page))
     }
 
-    fn parse_devices(&self, html: &str, page: &str) -> Result<Vec<Device>> {
+    fn parse_devices(&self, html: &str, page: &str) -> Vec<Device> {
         let document = Html::parse_document(html);
         let mut devices = Vec::new();
 
@@ -192,7 +192,7 @@ impl KnxClient {
             devices.push(device);
         }
 
-        Ok(devices)
+        devices
     }
 
     fn detect_device_type(&self, classes: &str, name: &str) -> DeviceType {
