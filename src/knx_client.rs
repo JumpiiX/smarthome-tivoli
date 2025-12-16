@@ -154,9 +154,7 @@ impl KnxClient {
 
             let name = element
                 .select(&name_selector)
-                .next()
-                .map(|n| n.text().collect::<String>().trim().to_string())
-                .unwrap_or_else(|| id.clone());
+                .next().map_or_else(|| id.clone(), |n| n.text().collect::<String>().trim().to_string());
 
             if name.is_empty() {
                 continue;
@@ -173,8 +171,7 @@ impl KnxClient {
             let is_active = element
                 .select(&button_selector)
                 .next()
-                .map(|btn| btn.value().attr("class").unwrap_or("").contains("btn-active"))
-                .unwrap_or(false);
+                .is_some_and(|btn| btn.value().attr("class").unwrap_or("").contains("btn-active"));
 
             let status_text = element
                 .select(&status_selector)
