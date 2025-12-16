@@ -124,14 +124,14 @@ impl KnxClient {
             };
             let response = self.client.get(&url).send().await?;
             let html = response.text().await?;
-            return Ok(self.parse_devices(&html, page));
+            return Ok(Self::parse_devices(&html, page));
         }
 
         let html = response.text().await?;
-        Ok(self.parse_devices(&html, page))
+        Ok(Self::parse_devices(&html, page))
     }
 
-    fn parse_devices(&self, html: &str, page: &str) -> Vec<Device> {
+    fn parse_devices(html: &str, page: &str) -> Vec<Device> {
         let document = Html::parse_document(html);
         let mut devices = Vec::new();
 
