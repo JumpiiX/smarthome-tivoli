@@ -175,7 +175,7 @@ impl AutoDiscovery {
         Ok(all_mappings)
     }
 
-    fn is_logged_in(&self, tab: &headless_chrome::Tab) -> bool {
+    fn is_logged_in(tab: &headless_chrome::Tab) -> bool {
         let check_js = r#"
             (function() {
                 const hasLoginForm = !!document.querySelector('input[name="email"]');
@@ -203,7 +203,7 @@ impl AutoDiscovery {
 
         std::thread::sleep(Duration::from_secs(3));
 
-        if self.is_logged_in(tab) {
+        if Self::is_logged_in(tab) {
             info!("✅ Already logged in! (Session restored from chrome_data/)");
             return Ok(());
         }
@@ -225,7 +225,7 @@ impl AutoDiscovery {
             std::thread::sleep(Duration::from_secs(1));
             attempts += 1;
 
-            if self.is_logged_in(tab) {
+            if Self::is_logged_in(tab) {
                 info!("");
                 info!("✅ Login successful!");
                 info!("   Your session has been saved to chrome_data/");
