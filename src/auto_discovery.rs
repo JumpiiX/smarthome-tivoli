@@ -293,7 +293,7 @@ impl AutoDiscovery {
                     let name = obj.get("name").and_then(|v| v.as_str()).unwrap_or("");
                     let index = obj.get("index").and_then(|v| v.as_str()).unwrap_or("");
                     let device_page = obj.get("page").and_then(|v| v.as_str()).unwrap_or("");
-                    let is_shifter = obj.get("isShifter").and_then(|v| v.as_bool()).unwrap_or(false);
+                    let is_shifter = obj.get("isShifter").and_then(serde_json::Value::as_bool).unwrap_or(false);
                     let icon_class = obj.get("iconClass").and_then(|v| v.as_str()).unwrap_or("");
 
                     if id.is_empty() || index.is_empty() {
