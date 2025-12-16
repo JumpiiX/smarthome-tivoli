@@ -371,7 +371,7 @@ impl KnxClient {
                     .context("Failed to extract session_id from current URL")?;
                 
                 let mut session_id = self.session_id.write().await;
-                *session_id = new_session_id.clone();
+                (*session_id).clone_from(&new_session_id);
                 info!("Session ID extracted from existing session");
                 return Ok(());
             }
@@ -379,14 +379,14 @@ impl KnxClient {
 
         info!("Not logged in, attempting automatic login...");
         
-        if let Ok(_) = tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10)) { info!("Login page loaded, filling credentials...") } else {
+        if tab.wait_for_element_with_custom_timeout("input[name='email']", Duration::from_secs(10)).is_ok() { info!("Login page loaded, filling credentials...") } else {
             let current_url = tab.get_url();
             if current_url.contains("session_id=") {
                 let new_session_id = Self::extract_session_id(&current_url)
                     .context("Failed to extract session_id")?;
                 
                 let mut session_id = self.session_id.write().await;
-                *session_id = new_session_id.clone();
+                (*session_id).clone_from(&new_session_id);
                 info!("Already logged in, session extracted");
                 return Ok(());
             }
@@ -443,7 +443,7 @@ impl KnxClient {
         info!("New session ID obtained: [REDACTED]");
 
         let mut session_id = self.session_id.write().await;
-        *session_id = new_session_id.clone();
+        (*session_id).clone_from(&new_session_id);
 
         info!("Session ready!");
 
