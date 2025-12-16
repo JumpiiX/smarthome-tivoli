@@ -287,7 +287,7 @@ impl AutoDiscovery {
 
         if !array.is_empty() {
 
-            for element in array.iter() {
+            for element in &array {
                 if let Some(obj) = element.as_object() {
                     let id = obj.get("id").and_then(|v| v.as_str()).unwrap_or("");
                     let name = obj.get("name").and_then(|v| v.as_str()).unwrap_or("");
