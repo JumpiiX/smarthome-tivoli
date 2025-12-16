@@ -311,17 +311,17 @@ impl AutoDiscovery {
                         let cmd_stop = format!("{index}+02+00+{device_page}");
                         let cmd_down = format!("{index}+03+00+{device_page}");
 
-                        mappings.insert(format!("{}_up", device_key), cmd_up.clone());
-                        mappings.insert(format!("{}_stop", device_key), cmd_stop.clone());
-                        mappings.insert(format!("{}_down", device_key), cmd_down.clone());
+                        mappings.insert(format!("{device_key}_up"), cmd_up.clone());
+                        mappings.insert(format!("{device_key}_stop"), cmd_stop.clone());
+                        mappings.insert(format!("{device_key}_down"), cmd_down.clone());
 
                         info!("    ✓ {} (Blind) → UP: {}, STOP: {}, DOWN: {}",
                             name, cmd_up, cmd_stop, cmd_down);
                     } else {
-                        let command = format!("{}+01+00+{}", index, device_page);
+                        let command = format!("{index}+01+00+{device_page}");
                         let device_key = format!("{id}_page{device_page}");
 
-                        mappings.insert(format!("{}_{}", device_key, icon_type), command.clone());
+                        mappings.insert(format!("{device_key}_{icon_type}"), command.clone());
                         info!("    ✓ {} → {}", name, command);
                     }
                 }
