@@ -33,6 +33,7 @@ impl AutoDiscovery {
         })
     }
 
+    #[allow(clippy::too_many_lines)]
     pub fn discover_all_mappings(&self, _pages: &[String]) -> Result<HashMap<String, String>> {
         info!("🔍 Starting auto-discovery mode...");
         info!("Auto-detecting all pages with devices...");
