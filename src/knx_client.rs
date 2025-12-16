@@ -84,7 +84,7 @@ impl KnxClient {
 
         info!("Auto-detecting pages...");
         for page_num in 1..=99 {
-            let page = format!("{:02}", page_num);
+            let page = format!("{page_num:02}");
 
             info!("Discovering devices on page {}", page);
             let page_devices = self.discover_page_devices(&page).await?;
