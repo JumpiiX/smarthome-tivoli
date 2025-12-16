@@ -62,7 +62,7 @@ pub struct ErrorResponse {
 
 impl From<&Device> for DeviceInfo {
     fn from(device: &Device) -> Self {
-        let device_type = format!("{:?}", device.device_type);
+        let device_type = format!("{:?}", device.type_);
         let state = match &device.state {
             DeviceState::OnOff(on) => DeviceStateInfo::OnOff { on: *on },
             DeviceState::Brightness { on, level } => DeviceStateInfo::Brightness {

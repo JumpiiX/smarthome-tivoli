@@ -163,7 +163,7 @@ impl KnxClient {
             }
 
             let classes = element.value().attr("class").unwrap_or("");
-            let device_type = self.detect_device_type(classes, &name);
+            let type_ = self.detect_device_type(classes, &name);
 
             if name.contains("Datum") || name.contains("Uhrzeit") {
                 debug!("Skipping informational device: {}", name);
@@ -183,10 +183,10 @@ impl KnxClient {
 
             debug!(
                 "Found device: id={}, name={}, type={:?}, index={}, active={}, status={:?}",
-                id, name, device_type, index, is_active, status_text
+                id, name, type_, index, is_active, status_text
             );
 
-            let mut device = Device::new(id, name, device_type, page.to_string(), index);
+            let mut device = Device::new(id, name, type_, page.to_string(), index);
             device.set_on(is_active);
 
             devices.push(device);

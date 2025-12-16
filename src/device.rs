@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub struct Device {
     pub id: String,
     pub name: String,
-    pub device_type: DeviceType,
+    pub type_: DeviceType,
     pub page: String,
     pub index: String,
     pub state: DeviceState,
@@ -43,8 +43,8 @@ impl Device {
         crate::command_mapper::CommandMapper::device_key(&self.id, &self.page)
     }
 
-    pub fn new(id: String, name: String, device_type: DeviceType, page: String, index: String) -> Self {
-        let state = match device_type {
+    pub fn new(id: String, name: String, type_: DeviceType, page: String, index: String) -> Self {
+        let state = match type_ {
             DeviceType::Light | DeviceType::Switch | DeviceType::Scene | DeviceType::Fan => {
                 DeviceState::OnOff(false)
             }
@@ -59,7 +59,7 @@ impl Device {
         Device {
             id,
             name,
-            device_type,
+            type_,
             page,
             index,
             state,
@@ -68,16 +68,14 @@ impl Device {
 
     pub fn is_on(&self) -> bool {
         match &self.state {
-            DeviceState::OnOff(on) => *on,
-            DeviceState::Brightness { on, .. } => *on,
+            DeviceState::OnOff(on) | DeviceState::Brightness { on, .. } => *on,
             _ => false,
         }
     }
 
     pub fn set_on(&mut self, value: bool) {
         match &mut self.state {
-            DeviceState::OnOff(on) => *on = value,
-            DeviceState::Brightness { on, .. } => *on = value,
+            DeviceState::OnOff(on) | DeviceState::Brightness { on, .. } => *on = value,
             _ => {}
         }
     }

@@ -83,7 +83,7 @@ async fn main() -> Result<()> {
     for device in &devices {
         info!(
             "  - {} ({}) - Type: {:?}, Page: {}, Index: {}",
-            device.name, device.id, device.device_type, device.page, device.index
+            device.name, device.id, device.type_, device.page, device.index
         );
     }
 
