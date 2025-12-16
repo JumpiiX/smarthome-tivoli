@@ -81,9 +81,9 @@ impl CommandMapper {
     pub fn get_blind_commands(&self, device_id: &str, page: &str) -> Option<BlindCommands> {
         let base_key = Self::device_key(device_id, page);
 
-        let up = self.command_cache.get(&format!("{}_up", base_key))?;
-        let stop = self.command_cache.get(&format!("{}_stop", base_key))?;
-        let down = self.command_cache.get(&format!("{}_down", base_key))?;
+        let up = self.command_cache.get(&format!("{base_key}_up"))?;
+        let stop = self.command_cache.get(&format!("{base_key}_stop"))?;
+        let down = self.command_cache.get(&format!("{base_key}_down"))?;
 
         if up == "READONLY" || stop == "READONLY" || down == "READONLY" {
             return None;
@@ -99,7 +99,7 @@ impl CommandMapper {
     #[allow(dead_code)]
     pub fn is_readonly(&self, device_id: &str, page: &str) -> bool {
         let key = Self::device_key(device_id, page);
-        self.command_cache.get(&key).map(|cmd| cmd == "READONLY").unwrap_or(false)
+        self.command_cache.get(&key).is_some_and(|cmd| cmd == "READONLY")
     }
 
     #[allow(dead_code)]
