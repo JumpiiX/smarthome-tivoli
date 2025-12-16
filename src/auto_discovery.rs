@@ -305,11 +305,11 @@ impl AutoDiscovery {
                         .unwrap_or("");
 
                     if is_shifter {
-                        let device_key = format!("{}_page{}", id, device_page);
+                        let device_key = format!("{id}_page{device_page}");
 
-                        let cmd_up = format!("{}+01+00+{}", index, device_page);
-                        let cmd_stop = format!("{}+02+00+{}", index, device_page);
-                        let cmd_down = format!("{}+03+00+{}", index, device_page);
+                        let cmd_up = format!("{index}+01+00+{device_page}");
+                        let cmd_stop = format!("{index}+02+00+{device_page}");
+                        let cmd_down = format!("{index}+03+00+{device_page}");
 
                         mappings.insert(format!("{}_up", device_key), cmd_up.clone());
                         mappings.insert(format!("{}_stop", device_key), cmd_stop.clone());
@@ -319,7 +319,7 @@ impl AutoDiscovery {
                             name, cmd_up, cmd_stop, cmd_down);
                     } else {
                         let command = format!("{}+01+00+{}", index, device_page);
-                        let device_key = format!("{}_page{}", id, device_page);
+                        let device_key = format!("{id}_page{device_page}");
 
                         mappings.insert(format!("{}_{}", device_key, icon_type), command.clone());
                         info!("    ✓ {} → {}", name, command);
