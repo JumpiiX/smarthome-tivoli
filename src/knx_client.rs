@@ -161,7 +161,7 @@ impl KnxClient {
             }
 
             let classes = element.value().attr("class").unwrap_or("");
-            let type_ = self.detect_device_type(classes, &name);
+            let type_ = Self::detect_device_type(classes, &name);
 
             if name.contains("Datum") || name.contains("Uhrzeit") {
                 debug!("Skipping informational device: {}", name);
@@ -192,7 +192,7 @@ impl KnxClient {
         devices
     }
 
-    fn detect_device_type(&self, classes: &str, name: &str) -> DeviceType {
+    fn detect_device_type(classes: &str, name: &str) -> DeviceType {
         let name_lower = name.to_lowercase();
 
         if name_lower.contains("temperatur") || name_lower.contains("temp.") {
@@ -366,7 +366,7 @@ impl KnxClient {
             
             let current_url = tab.get_url();
             if current_url.contains("session_id=") {
-                let new_session_id = self.extract_session_id(&current_url)
+                let new_session_id = Self::extract_session_id(&current_url)
                     .context("Failed to extract session_id from current URL")?;
                 
                 let mut session_id = self.session_id.write().await;
@@ -383,7 +383,7 @@ impl KnxClient {
             Err(_) => {
                 let current_url = tab.get_url();
                 if current_url.contains("session_id=") {
-                    let new_session_id = self.extract_session_id(&current_url)
+                    let new_session_id = Self::extract_session_id(&current_url)
                         .context("Failed to extract session_id")?;
                     
                     let mut session_id = self.session_id.write().await;
@@ -440,7 +440,7 @@ impl KnxClient {
 
         info!("OAuth login successful, extracting new session...");
 
-        let new_session_id = self.extract_session_id(&final_url)
+        let new_session_id = Self::extract_session_id(&final_url)
             .context("Failed to extract session_id from final URL")?;
 
         info!("New session ID obtained: [REDACTED]");
@@ -453,7 +453,7 @@ impl KnxClient {
         Ok(())
     }
 
-    fn extract_session_id(&self, url: &str) -> Result<String> {
+    fn extract_session_id(url: &str) -> Result<String> {
         if let Some(session_part) = url.split("session_id=").nth(1) {
             let session_id = session_part
                 .split('&')
