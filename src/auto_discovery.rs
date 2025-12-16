@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use headless_chrome::{Browser, LaunchOptions};
 use std::collections::HashMap;
 use std::env;
+use std::fmt::Write;
 use std::fs;
 use std::time::Duration;
 use tracing::info;
@@ -170,7 +171,7 @@ impl AutoDiscovery {
 
         info!("✅ Discovery complete! Found {} device mappings", all_mappings.len());
 
-        self.save_mappings(&all_mappings)?;
+        Self::save_mappings(&all_mappings)?;
 
         Ok(all_mappings)
     }
@@ -331,7 +332,7 @@ impl AutoDiscovery {
         Ok(mappings)
     }
 
-    fn save_mappings(&self, mappings: &HashMap<String, String>) -> Result<()> {
+    fn save_mappings(mappings: &HashMap<String, String>) -> Result<()> {
         info!("💾 Saving mappings to device_mappings_auto.toml...");
 
         let mut lights = HashMap::new();
@@ -369,7 +370,7 @@ impl AutoDiscovery {
         if !lights.is_empty() {
             content.push_str("[lights]\n");
             for (key, cmd) in lights {
-                content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
+                writeln!(content, "\"{key}\" = \"{cmd}\"").ok();
             }
             content.push('\n');
         }
@@ -377,7 +378,7 @@ impl AutoDiscovery {
         if !blinds.is_empty() {
             content.push_str("[blinds]\n");
             for (key, cmd) in blinds {
-                content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
+                writeln!(content, "\"{key}\" = \"{cmd}\"").ok();
             }
             content.push('\n');
         }
@@ -385,7 +386,7 @@ impl AutoDiscovery {
         if !dimmers.is_empty() {
             content.push_str("[dimmers]\n");
             for (key, cmd) in dimmers {
-                content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
+                writeln!(content, "\"{key}\" = \"{cmd}\"").ok();
             }
             content.push('\n');
         }
@@ -393,7 +394,7 @@ impl AutoDiscovery {
         if !ventilation.is_empty() {
             content.push_str("[ventilation]\n");
             for (key, cmd) in ventilation {
-                content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
+                writeln!(content, "\"{key}\" = \"{cmd}\"").ok();
             }
             content.push('\n');
         }
@@ -401,7 +402,7 @@ impl AutoDiscovery {
         if !scenes.is_empty() {
             content.push_str("[scenes]\n");
             for (key, cmd) in scenes {
-                content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
+                writeln!(content, "\"{key}\" = \"{cmd}\"").ok();
             }
             content.push('\n');
         }
@@ -409,7 +410,7 @@ impl AutoDiscovery {
         if !sensors.is_empty() {
             content.push_str("[sensors]\n");
             for (key, _cmd) in sensors {
-                content.push_str(&format!("\"{}\" = \"READONLY\"\n", key));
+                writeln!(content, "\"{key}\" = \"READONLY\"").ok();
             }
             content.push('\n');
         }
@@ -417,7 +418,7 @@ impl AutoDiscovery {
         if !switches.is_empty() {
             content.push_str("[switches]\n");
             for (key, cmd) in switches {
-                content.push_str(&format!("\"{}\" = \"{}\"\n", key, cmd));
+                writeln!(content, "\"{key}\" = \"{cmd}\"").ok();
             }
             content.push('\n');
         }
